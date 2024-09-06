@@ -1,4 +1,5 @@
 from app.config.db_config import user_collection, candidate_collection
+from fastapi.responses import StreamingResponse
 from app.dtos.user_dto import User
 from app.dtos.candidate_dto import Candidate
 from uuid import uuid4
@@ -6,7 +7,10 @@ from fastapi import HTTPException, status, Query
 import logging
 from bson import ObjectId
 from typing import List, Optional, Literal
-
+import pandas as pd
+import io
+from pymongo import MongoClient
+from typing import List
 
 
 class CandidateController:
@@ -70,7 +74,7 @@ class CandidateController:
         except Exception as e:
             logging.error(f"An error occurred while deleting a candidate: {e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
-
+        
     def get_all_candidates(
         first_name: Optional[str] = Query(None),
         last_name: Optional[str] = Query(None),
@@ -127,5 +131,36 @@ class CandidateController:
             return candidates
         except Exception as e:
             logging.error(f"An error occurred while retrieving candidates: {e}")
+            raise HTTPException(status_code=500, detail="Internal Server Error")
+        
+    def generate_report():
+        try:
+            # Fetch all candidates
+            candidates = list(candidate_collection.find())
+
+            if not candidates:
+                raise HTTPException(status_code=404, detail="No candidates found")
+
+            # Convert candidates to DataFrame
+            df = pd.DataFrame(candidates)
+            
+            # Convert ObjectId to string
+            df["_id"] = df["_id"].astype(str)
+
+            # Create a CSV in memory
+            csv_buffer = io.StringIO()
+            df.to_csv(csv_buffer, index=False)
+
+            # Seek to the start of the stream
+            csv_buffer.seek(0)
+
+            return StreamingResponse(
+                csv_buffer,
+                media_type="text/csv",
+                headers={"Content-Disposition": "attachment; filename=candidates_report.csv"}
+            )
+
+        except Exception as e:
+            logging.error(f"An error occurred while generating the report: {e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
     

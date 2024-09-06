@@ -22,6 +22,10 @@ def delete_candidate(candidate_id: str):
 def edit_candidate(candidate_id: str,updated_candidate: Candidate):
     return CandidateController.edit_candidate(candidate_id,updated_candidate)
 
+@candidate.get("/generate-report")
+def generate_report():
+    return CandidateController.generate_report()
+
 @candidate.get("/all-candidates")
 def get_all_candidates(
     first_name: Optional[str] = Query(None),
