@@ -1,32 +1,32 @@
 from fastapi import APIRouter, Depends, Query
-from app.dtos.user_dto import User
-from app.dtos.candidate_dto import Candidate
-from app.controller.candidate_controller import CandidateController
+from app.models.user import User
+from app.models.candidate import Candidate
+from app.service.candidate_service import CandidateService
 from typing import Optional,List, Literal
-from app.dtos.user_dto import UserResponseModel
+from app.models.user import UserResponseModel
 from app.helper.token_helper import TokenHelper
 
 candidate = APIRouter()
 
 @candidate.post("/candidate")
 def create_candidate(candidate: Candidate, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
-    return CandidateController.create_candidate(candidate, current_user)
+    return CandidateService.create_candidate(candidate, current_user)
 
 @candidate.get("/candidate/{candidate_id}")
 def get_candidate(candidate_id: str, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
-    return CandidateController.get_candidate(candidate_id, current_user)
+    return CandidateService.get_candidate(candidate_id, current_user)
 
 @candidate.delete("/candidate/{candidate_id}")
 def delete_candidate(candidate_id: str, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
-    return CandidateController.delete_candidate(candidate_id, current_user)
+    return CandidateService.delete_candidate(candidate_id, current_user)
 
 @candidate.put("/candidate/{candidate_id}")
 def edit_candidate(candidate_id: str,updated_candidate: Candidate, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
-    return CandidateController.edit_candidate(candidate_id,updated_candidate, current_user)
+    return CandidateService.edit_candidate(candidate_id,updated_candidate, current_user)
 
 @candidate.get("/generate-report")
 def generate_report():
-    return CandidateController.generate_report()
+    return CandidateService.generate_report()
 
 @candidate.get("/all-candidates")
 def get_all_candidates(
@@ -46,7 +46,7 @@ def get_all_candidates(
     gender: Optional[Literal['Male', 'Female', 'NotSpecified']] = Query(None),
     search: Optional[str] = Query(None)
 ):
-    return CandidateController.get_all_candidates(
+    return CandidateService.get_all_candidates(
         current_user,
         first_name=first_name,
         last_name=last_name,

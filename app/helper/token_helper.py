@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 from app.config.db_config import user_collection
 from bson import ObjectId
-from app.dtos.user_dto import UserResponseModel
+from app.models.user import UserResponseModel
 from fastapi.security import OAuth2PasswordBearer
 
 load_dotenv()
