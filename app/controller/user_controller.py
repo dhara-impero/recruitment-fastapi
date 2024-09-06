@@ -1,10 +1,10 @@
 from app.config.db_config import user_collection
-# from bson.objectid import ObjectId
 from app.dtos.user_dto import User
 from uuid import uuid4
 from fastapi import HTTPException, status
 import logging
 from bson import ObjectId
+from app.helper.token_helper import TokenHelper
 
 
 class UserController:
@@ -18,8 +18,15 @@ class UserController:
             if result.acknowledged:
                 # Return user data along with the created ID
                 user_data["_id"] = str(result.inserted_id)  # Convert ObjectId to string
-                return {"status": "success", "user": user_data}
-
+                access_token = TokenHelper.create_access_token(
+                    data={"id": str(result.inserted_id)}
+                )
+                return {
+                    "status": "ok",
+                    "token": access_token,
+                    "user": user_data,
+                }
+            
             # If not acknowledged, raise an exception
             raise HTTPException(status_code=500, detail="User could not be created")
 

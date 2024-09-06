@@ -14,8 +14,9 @@ from typing import List
 
 
 class CandidateController:
-    def create_candidate(candidate: Candidate):
+    def create_candidate(candidate: Candidate, current_user):
         candidate_data = candidate.dict()  # Convert Pydantic model to dict
+        candidate_data["user_id"] = str(current_user["_id"])
         try:
             # Insert user data into the MongoDB collection
             result: InsertOneResult = candidate_collection.insert_one(candidate_data)
@@ -31,25 +32,26 @@ class CandidateController:
 
         except Exception as e:
             # Log the error for debugging purposes
-            logging.error(f"An error occurred while creating a user: {e}")
+            logging.error(f"An error occurred while creating a user: {e.detail}")
             # Raise an HTTPException with a 500 status code
-            raise HTTPException(status_code=500, detail="Internal Server Error")
+            raise HTTPException(status_code=500, detail=e.detail)
     
-    def get_candidate(candidate_id: str):
+    def get_candidate(candidate_id: str, current_user):
         try:
-            print("candidate")
-            candidate_data = candidate_collection.find_one({"_id": ObjectId(candidate_id)})
-            if candidate_data is None:
+            candidate_data = candidate_collection.find_one({"_id": ObjectId(candidate_id), "user_id": str(current_user['_id'])})
+            if not candidate_data:
                 raise HTTPException(status_code=404, detail="Candidate not found")
             candidate_data["_id"] = str(candidate_data["_id"])
             return candidate_data
         except Exception as e:
-            logging.error(f"An error occurred while retrieving a candidate: {e}")
-            raise HTTPException(status_code=500, detail="Internal Server Error")
+            logging.error(f"An error occurred while retrieving a candidate: {e.detail}")
+            raise HTTPException(status_code=500, detail=e.detail)
 
-    def edit_candidate(candidate_id: str, updated_candidate: Candidate):
-        print("*****")
+    def edit_candidate(candidate_id: str, updated_candidate: Candidate, current_user):
         try:
+            candidate_data = candidate_collection.find_one({"_id": ObjectId(candidate_id), "user_id": str(current_user['_id'])})
+            if not candidate_data:
+                raise HTTPException(status_code=404, detail="Candidate not found")
             update_result: UpdateResult = candidate_collection.update_one(
                 {"_id": ObjectId(candidate_id)},
                 {"$set": updated_candidate.dict(exclude_unset=True)}
@@ -62,20 +64,24 @@ class CandidateController:
             updated_candidate_data["_id"] = str(updated_candidate_data["_id"])
             return {"status": "success", "candidate": updated_candidate_data}
         except Exception as e:
-            logging.error(f"An error occurred while updating a candidate: {e}")
-            raise HTTPException(status_code=500, detail="Internal Server Error")
+            logging.error(f"An error occurred while updating a candidate: {e.detail}")
+            raise HTTPException(status_code=500, detail=e.detail)
 
-    def delete_candidate(candidate_id: str):
+    def delete_candidate(candidate_id: str, current_user):
         try:
+            candidate_data = candidate_collection.find_one({"_id": ObjectId(candidate_id), "user_id": str(current_user['_id'])})
+            if not candidate_data:
+                raise HTTPException(status_code=404, detail="Candidate not found")
             delete_result: DeleteResult = candidate_collection.delete_one({"_id": ObjectId(candidate_id)})
             if delete_result.deleted_count == 0:
                 raise HTTPException(status_code=404, detail="Candidate not found")
             return {"status": "success", "message": "Candidate deleted"}
         except Exception as e:
-            logging.error(f"An error occurred while deleting a candidate: {e}")
-            raise HTTPException(status_code=500, detail="Internal Server Error")
-        
+            logging.error(f"An error occurred while deleting a candidate: {e.detail}")
+            raise HTTPException(status_code=500, detail=e.detail)
+
     def get_all_candidates(
+        current_user,
         first_name: Optional[str] = Query(None),
         last_name: Optional[str] = Query(None),
         email: Optional[str] = Query(None),
@@ -92,7 +98,9 @@ class CandidateController:
         search: Optional[str] = Query(None)
     ):
         try:
-            query = {}
+            base_query = {"user_id": str(current_user['_id'])}
+            
+            query = base_query.copy()
             if first_name:
                 query["first_name"] = first_name
             if last_name:
@@ -123,15 +131,16 @@ class CandidateController:
                 query["gender"] = gender
             if search:
                 query["$text"] = {"$search": search}
-            print("--------------------------------")
-            print(query)
-            candidates = list(candidate_collection.find({"$text": {"$search": "Dhara"}}))
+            candidates_cursor = list(candidate_collection.find(query))
+            candidates = list(candidates_cursor)
             for candidate in candidates:
                 candidate["_id"] = str(candidate["_id"])
+            if not candidates:
+                raise HTTPException(status_code=404, detail="No candidates found")
             return candidates
         except Exception as e:
-            logging.error(f"An error occurred while retrieving candidates: {e}")
-            raise HTTPException(status_code=500, detail="Internal Server Error")
+            logging.error(f"An error occurred while retrieving candidates: {e.detail}")
+            raise HTTPException(status_code=500, detail=e.detail)
         
     def generate_report():
         try:

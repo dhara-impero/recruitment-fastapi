@@ -7,3 +7,10 @@ class User(BaseModel):
     last_name: str
     email: EmailStr
     UUID: str = str(uuid4())
+    
+class UserResponseModel(BaseModel):
+    _id: str
+    first_name: str
+    last_name: str
+    email: EmailStr
+    UUID: str = str(uuid4())

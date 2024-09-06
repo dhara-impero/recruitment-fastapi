@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Literal
 from uuid import uuid4
+from typing import Optional
 
 class Candidate(BaseModel):
     first_name: str
@@ -16,3 +17,4 @@ class Candidate(BaseModel):
     city: str
     salary: float
     gender: Literal['Male', 'Female', 'NotSpecified']
+    user_id: Optional[str] = None

@@ -1,11 +1,15 @@
 from pymongo.mongo_client import MongoClient
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+uri = os.getenv('DATABASE_URL')
 # Initialize MongoDB connection
-uri = "mongodb+srv://dharaimpero:adDYA129W1w98B3i@recruitment.jiq3r.mongodb.net/"
 
 client = MongoClient(uri)
 
-db = client['recruitment']
+db = client[f"{os.getenv('MONGO_INITDB_DATABASE')}"]
 
 user_collection = db['users']
 candidate_collection = db['candidates']

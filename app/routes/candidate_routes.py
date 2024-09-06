@@ -3,24 +3,26 @@ from app.dtos.user_dto import User
 from app.dtos.candidate_dto import Candidate
 from app.controller.candidate_controller import CandidateController
 from typing import Optional,List, Literal
+from app.dtos.user_dto import UserResponseModel
+from app.helper.token_helper import TokenHelper
 
 candidate = APIRouter()
 
 @candidate.post("/candidate")
-def create_candidate(candidate: Candidate):
-    return CandidateController.create_candidate(candidate)
+def create_candidate(candidate: Candidate, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
+    return CandidateController.create_candidate(candidate, current_user)
 
 @candidate.get("/candidate/{candidate_id}")
-def get_candidate(candidate_id: str):
-    return CandidateController.get_candidate(candidate_id)
+def get_candidate(candidate_id: str, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
+    return CandidateController.get_candidate(candidate_id, current_user)
 
 @candidate.delete("/candidate/{candidate_id}")
-def delete_candidate(candidate_id: str):
-    return CandidateController.delete_candidate(candidate_id)
+def delete_candidate(candidate_id: str, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
+    return CandidateController.delete_candidate(candidate_id, current_user)
 
 @candidate.put("/candidate/{candidate_id}")
-def edit_candidate(candidate_id: str,updated_candidate: Candidate):
-    return CandidateController.edit_candidate(candidate_id,updated_candidate)
+def edit_candidate(candidate_id: str,updated_candidate: Candidate, current_user: UserResponseModel = Depends(TokenHelper.verify_token)):
+    return CandidateController.edit_candidate(candidate_id,updated_candidate, current_user)
 
 @candidate.get("/generate-report")
 def generate_report():
@@ -28,6 +30,7 @@ def generate_report():
 
 @candidate.get("/all-candidates")
 def get_all_candidates(
+    current_user: UserResponseModel = Depends(TokenHelper.verify_token),
     first_name: Optional[str] = Query(None),
     last_name: Optional[str] = Query(None),
     email: Optional[str] = Query(None),
@@ -44,6 +47,7 @@ def get_all_candidates(
     search: Optional[str] = Query(None)
 ):
     return CandidateController.get_all_candidates(
+        current_user,
         first_name=first_name,
         last_name=last_name,
         email=email,
