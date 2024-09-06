@@ -14,6 +14,17 @@ db = client[f"{os.getenv('MONGO_INITDB_DATABASE')}"]
 user_collection = db['users']
 candidate_collection = db['candidates']
 
+candidate_collection.create_index([("first_name", "text"),
+    ("last_name", "text"),
+    ("email", "text"),
+    ("career_level", "text"),
+    ("job_major", "text"),
+    ("degree_type", "text"),
+    ("skills", "text"),
+    ("nationality", "text"),
+    ("city", "text")
+])
+
 try:
     client.admin.command('ping')
     print("Connected to Mongo")
