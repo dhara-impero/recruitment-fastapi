@@ -8,4 +8,8 @@ user = APIRouter()
 def create_user(user: User):
     return UserController.create_user(user)
 
+@user.get("/user/{user_id}")
+def get_user(user_id: str):
+    return UserController.get_user(user_id)
+
 # Add more routes for update, delete, etc.

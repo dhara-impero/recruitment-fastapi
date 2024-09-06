@@ -1,9 +1,17 @@
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
 
 # Initialize MongoDB connection
-client = MongoClient('mongodb://localhost:27017')
-db = client['recruitment-apis']
+uri = "mongodb+srv://dharaimpero:adDYA129W1w98B3i@recruitment.jiq3r.mongodb.net/"
 
-# Access collections
+client = MongoClient(uri)
+
+db = client['recruitment']
+
 user_collection = db['users']
 candidate_collection = db['candidates']
+
+try:
+    client.admin.command('ping')
+    print("Connected to Mongo")
+except Exception as e:
+    print(e)

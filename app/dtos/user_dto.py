@@ -6,4 +6,4 @@ class User(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
-    UUID: Optional[str] = None
+    UUID: str = str(uuid4())
