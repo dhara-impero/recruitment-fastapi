@@ -1,11 +1,27 @@
 # main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
 import uvicorn
+from app.routes.user_routes import user
+from app.routes.candidate_routes import candidate
+from app.helper.logger_helper import setup_logger
+import os
+import logging
+from dotenv import load_dotenv
+from os.path import join, dirname
 
-app = FastAPI()
+# Load environment variables from the .env file
+dotenv_path = join(dirname(__file__), ".env")
+load_dotenv(dotenv_path)
 
+setup_logger()
+
+# Create the FastAPI application instance
+app = FastAPI(
+    title="FastAPI",
+    version="0.0.1",
+)
+    
 # Health check route
 @app.get("/health", status_code=200)
 def health_check():
@@ -14,7 +30,8 @@ def health_check():
     """
     return {"status": "healthy"}
 
-# Other routes and logic here...
+# Include routers for user and candidate endpoints
+app.include_router(user)  # Register the user router for user-related routes
+app.include_router(candidate)  # Register the candidate router for candidate-related routes
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8989)
+
