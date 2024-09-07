@@ -7,7 +7,7 @@ from typing import Optional
 class UserRepository:
     @staticmethod
     def create_user(user: User) -> dict:
-        user_data = user.dict()  # Convert Pydantic model to dict
+        user_data = user.__dict__  # Convert Pydantic model to dict
         result: InsertOneResult = user_collection.insert_one(user_data)
         if result.acknowledged:
             user_data["_id"] = str(result.inserted_id)  # Convert ObjectId to string

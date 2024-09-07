@@ -18,7 +18,7 @@ class CandidateRepository:
         Raises:
         - Exception if the candidate could not be created.
         """
-        candidate_data = candidate.dict()
+        candidate_data = candidate.__dict__
         result: InsertOneResult = candidate_collection.insert_one(candidate_data)
         if result.acknowledged:
             candidate_data["_id"] = str(result.inserted_id)

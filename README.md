@@ -19,6 +19,8 @@ This project is a **Candidate Profile Management** system allowing users to crea
     - [3.  Run the Application with Docker](#3--run-the-application-with-docker)
     - [4.  Access the API](#4--access-the-api)
     - [5. Access Swagger API Documentation](#5-access-swagger-api-documentation)
+    - [5. Running Tests](#6-running-tests)
+    
 
 ---
 
@@ -90,3 +92,17 @@ FastAPI generates documentation automatically. You can access it at:
 Swagger UI: http://localhost:8000/docs
 Redoc: http://localhost:8000/redoc
 ```
+
+### 5. Running Tests
+Ensure you have all test dependencies installed. You can do this by installing the requirements from requirements.txt
+
+```
+pip install -r requirements.txt
+```
+
+Run Tests Locally
+
+```
+pytest
+```
+
