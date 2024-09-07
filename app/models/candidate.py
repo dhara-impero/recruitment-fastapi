@@ -1,8 +1,10 @@
-from pydantic import BaseModel, EmailStr
-from typing import List, Literal
-from uuid import uuid4
-from typing import Optional
+# Importing necessary libraries
+from pydantic import BaseModel, EmailStr  # Pydantic BaseModel for data validation, EmailStr for email validation
+from typing import List, Literal  # List for typing lists of values, Literal for defining allowed values
+from uuid import uuid4  # UUID generation for unique identification
+from typing import Optional  # Optional to allow some fields to be optional
 
+# Define the Candidate class that extends from Pydantic's BaseModel for validation and data handling
 class Candidate(BaseModel):
     first_name: str
     last_name: str

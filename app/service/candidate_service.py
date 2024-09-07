@@ -1,15 +1,28 @@
-from app.repository.candidate_repository import CandidateRepository
-from app.models.candidate import Candidate
-from fastapi import HTTPException
-import logging
-import pandas as pd
-import io
-from fastapi.responses import StreamingResponse
-from typing import List, Optional
+# Import necessary libraries and modules
+from app.repository.candidate_repository import CandidateRepository  # Import CandidateRepository for database operations
+from app.models.candidate import Candidate  # Import Candidate model for type hinting and validation
+from fastapi import HTTPException  # Import FastAPI components for handling HTTP exceptions
+import logging  # Import logging for error logging
+import pandas as pd  # Import pandas for data manipulation and CSV generation
+import io  # Import io for handling in-memory file-like objects
+from fastapi.responses import StreamingResponse  # Import StreamingResponse for streaming file responses
+from typing import List, Optional  # Import type hints for optional and list types
 
 class CandidateService:
     @staticmethod
     def create_candidate(candidate: Candidate, user_id: str) -> dict:
+        """
+        Create a new candidate and associate it with a user.
+        
+        - **candidate**: Candidate data for creation (validated with Candidate model)
+        - **user_id**: ID of the user creating the candidate
+        
+        Returns:
+        - A dictionary containing the status of the operation and the created candidate data.
+        
+        Raises:
+        - HTTPException with status code 500 if an error occurs during candidate creation.
+        """
         candidate.user_id = user_id
         try:
             candidate_data = CandidateRepository.create_candidate(candidate)
@@ -20,6 +33,18 @@ class CandidateService:
     
     @staticmethod
     def get_candidate(candidate_id: str, user_id: str) -> dict:
+        """
+        Retrieve a candidate by their ID.
+        
+        - **candidate_id**: ID of the candidate to retrieve
+        - **user_id**: ID of the user requesting the candidate
+        
+        Returns:
+        - The candidate data if found.
+        
+        Raises:
+        - HTTPException with status code 404 if the candidate is not found.
+        """
         candidate_data = CandidateRepository.get_candidate(candidate_id, user_id)
         if candidate_data:
             return candidate_data
@@ -27,6 +52,19 @@ class CandidateService:
 
     @staticmethod
     def edit_candidate(candidate_id: str, updated_candidate: Candidate, user_id: str) -> dict:
+        """
+        Update an existing candidate's information.
+        
+        - **candidate_id**: ID of the candidate to update
+        - **updated_candidate**: New candidate data (validated with Candidate model)
+        - **user_id**: ID of the user making the update
+        
+        Returns:
+        - A dictionary containing the status of the operation and the updated candidate data.
+        
+        Raises:
+        - HTTPException with status code 500 if an error occurs during candidate update.
+        """
         try:
             updated_candidate_data = CandidateRepository.edit_candidate(candidate_id, updated_candidate, user_id)
             return {"status": "success", "candidate": updated_candidate_data}
@@ -36,6 +74,18 @@ class CandidateService:
 
     @staticmethod
     def delete_candidate(candidate_id: str, user_id: str) -> dict:
+        """
+        Delete a candidate by their ID.
+        
+        - **candidate_id**: ID of the candidate to delete
+        - **user_id**: ID of the user requesting the deletion
+        
+        Returns:
+        - A dictionary indicating the success of the deletion operation.
+        
+        Raises:
+        - HTTPException with status code 500 if an error occurs during candidate deletion.
+        """
         try:
             return CandidateRepository.delete_candidate(candidate_id, user_id)
         except Exception as e:
@@ -60,6 +110,16 @@ class CandidateService:
         gender: Optional[str] = None,
         search: Optional[str] = None
     ) -> List[dict]:
+        """
+        Retrieve all candidates with optional filters.
+        
+        Returns:
+        - A list of candidates matching the filters.
+        
+        Raises:
+        - HTTPException with status code 404 if no candidates are found.
+        - HTTPException with status code 500 if an error occurs during candidate retrieval.
+        """
         filters = {}
         if first_name:
             filters["first_name"] = first_name
@@ -102,6 +162,16 @@ class CandidateService:
 
     @staticmethod
     def generate_report() -> StreamingResponse:
+        """
+        Generate a CSV report of all candidates.
+        
+        Returns:
+        - A StreamingResponse containing the CSV file.
+        
+        Raises:
+        - HTTPException with status code 404 if no candidates are found.
+        - HTTPException with status code 500 if an error occurs during report generation.
+        """
         try:
             candidates = CandidateRepository.fetch_all_candidates()
             if not candidates:
