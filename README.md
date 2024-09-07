@@ -94,15 +94,10 @@ Redoc: http://localhost:8000/redoc
 ```
 
 ### 5. Running Tests
-Ensure you have all test dependencies installed. You can do this by installing the requirements from requirements.txt
-
-```
-pip install -r requirements.txt
-```
 
 Run Tests Locally
 
 ```
-pytest
+sudo docker compose run test
 ```
 
