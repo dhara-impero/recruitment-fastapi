@@ -14,6 +14,10 @@ db = client[f"{os.getenv('MONGO_INITDB_DATABASE')}"]
 user_collection = db['users']
 candidate_collection = db['candidates']
 
+indexes = candidate_collection.index_information()
+index_name = list(indexes.keys())
+candidate_collection.drop_index(index_name[1])
+
 candidate_collection.create_index([("first_name", "text"),
     ("last_name", "text"),
     ("email", "text"),
@@ -22,7 +26,8 @@ candidate_collection.create_index([("first_name", "text"),
     ("degree_type", "text"),
     ("skills", "text"),
     ("nationality", "text"),
-    ("city", "text")
+    ("city", "text"),
+    ("gender", "text")
 ])
 
 try:
