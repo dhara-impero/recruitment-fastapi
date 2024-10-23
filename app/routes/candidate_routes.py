@@ -1,5 +1,5 @@
 # Import necessary libraries and modules
-from fastapi import APIRouter, Depends, Query  # FastAPI components for creating routes, dependency injection, and query parameters
+from fastapi import APIRouter, BackgroundTasks, Depends, Query  # FastAPI components for creating routes, dependency injection, and query parameters
 from app.models.user import User  # Import User model (though not used in the provided code)
 from app.models.candidate import Candidate  # Import Candidate model for request body validation
 from app.service.candidate_service import CandidateService  # Service class for candidate-related operations
@@ -57,11 +57,15 @@ def edit_candidate(candidate_id: str, updated_candidate: Candidate, current_user
 
 # Route to generate a report (e.g., of all candidates or specific data)
 @candidate.get("/generate-report")
-def generate_report():
+def generate_report(background_tasks: BackgroundTasks):
     """
     Generate a report based on candidate data.
     """
-    return CandidateService.generate_report()
+    return CandidateService.generate_report(background_tasks)
+
+@candidate.get("/download-report")
+async def download_report():
+    return await CandidateService.download_report()
 
 # Route to retrieve all candidates with optional filtering
 @candidate.get("/all-candidates")

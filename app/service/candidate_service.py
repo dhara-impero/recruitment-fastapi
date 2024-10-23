@@ -5,8 +5,10 @@ from fastapi import HTTPException  # Import FastAPI components for handling HTTP
 import logging  # Import logging for error logging
 import pandas as pd  # Import pandas for data manipulation and CSV generation
 import io  # Import io for handling in-memory file-like objects
-from fastapi.responses import StreamingResponse  # Import StreamingResponse for streaming file responses
 from typing import List, Optional  # Import type hints for optional and list types
+from fastapi import BackgroundTasks # Import FastAPI components for Background Tasks
+from fastapi.responses import FileResponse
+import os
 
 class CandidateService:
     @staticmethod
@@ -155,13 +157,47 @@ class CandidateService:
         try:
             candidates = CandidateRepository.get_all_candidates(user_id, filters)
             if not candidates:
-                raise HTTPException(status_code=404, detail="No candidates found")
+                return HTTPException(status_code=404, detail="No candidates found")
             return candidates
         except Exception as e:
             raise HTTPException(status_code=500, detail="Internal Server Error")
 
+    def save_csv_report(candidates, filename: str):
+        """Helper function to generate and save the CSV report."""
+        try:
+            # Create DataFrame and convert ObjectId to string
+            df = pd.DataFrame(candidates)
+            df["_id"] = df["_id"].astype(str)
+
+            # Save the CSV file to disk
+            csv_buffer = io.StringIO()
+            df.to_csv(csv_buffer, index=False)
+            csv_buffer.seek(0)
+
+            # Write the CSV to a file
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(csv_buffer.getvalue())
+
+        except Exception as e:
+            logging.error(f"An error occurred while generating the CSV: {e}")
+            raise
+
+    async def download_report():
+        """
+        Endpoint to download the CSV report once it's generated.
+        
+        Returns:
+        - FileResponse with the CSV report file if it exists.
+        """
+        filename = "candidates_report.csv"
+        
+        if os.path.exists(filename):
+            return FileResponse(filename, media_type="text/csv", filename=filename)
+        else:
+            raise HTTPException(status_code=404, detail="Report not found. Please try again later.")
+
     @staticmethod
-    def generate_report() -> StreamingResponse:
+    def generate_report(background_tasks: BackgroundTasks):
         """
         Generate a CSV report of all candidates.
         
@@ -177,18 +213,11 @@ class CandidateService:
             if not candidates:
                 raise HTTPException(status_code=404, detail="No candidates found")
 
-            df = pd.DataFrame(candidates)
-            df["_id"] = df["_id"].astype(str)
+            filename = "candidates_report.csv"
+            background_tasks.add_task(CandidateService.save_csv_report, candidates, filename)
 
-            csv_buffer = io.StringIO()
-            df.to_csv(csv_buffer, index=False)
-            csv_buffer.seek(0)
+            return {"message": "Report generation in progress. You can download the report once it's ready."}
 
-            return StreamingResponse(
-                csv_buffer,
-                media_type="text/csv",
-                headers={"Content-Disposition": "attachment; filename=candidates_report.csv"}
-            )
         except Exception as e:
             logging.error(f"An error occurred while generating the report: {e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
