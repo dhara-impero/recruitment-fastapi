@@ -25,11 +25,15 @@ class CandidateService:
         Raises:
         - HTTPException with status code 500 if an error occurs during candidate creation.
         """
+        # Associate the user ID with the candidate
         candidate.user_id = user_id
         try:
+            # Call repository to save candidate data in the database
             candidate_data = CandidateRepository.create_candidate(candidate)
+            # Return success status and created candidate data
             return {"status": "success", "candidate": candidate_data}
         except Exception as e:
+            # Log the error and raise an HTTP exception in case of failure
             logging.error(f"An error occurred while creating a candidate: {e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
     
@@ -47,7 +51,9 @@ class CandidateService:
         Raises:
         - HTTPException with status code 404 if the candidate is not found.
         """
+        # Call repository to get candidate data based on candidate ID and user ID
         candidate_data = CandidateRepository.get_candidate(candidate_id, user_id)
+        # If the candidate is found, return the data, otherwise raise 404 error
         if candidate_data:
             return candidate_data
         raise HTTPException(status_code=404, detail="Candidate not found")
@@ -68,9 +74,12 @@ class CandidateService:
         - HTTPException with status code 500 if an error occurs during candidate update.
         """
         try:
+            # Call repository to update the candidate data in the database
             updated_candidate_data = CandidateRepository.edit_candidate(candidate_id, updated_candidate, user_id)
+            # Return success status and updated candidate data
             return {"status": "success", "candidate": updated_candidate_data}
         except Exception as e:
+            # Log the error and raise an HTTP exception in case of failure
             logging.error(f"An error occurred while updating a candidate: {e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -89,8 +98,10 @@ class CandidateService:
         - HTTPException with status code 500 if an error occurs during candidate deletion.
         """
         try:
+            # Call repository to delete the candidate from the database
             return CandidateRepository.delete_candidate(candidate_id, user_id)
         except Exception as e:
+            # Log the error and raise an HTTP exception in case of failure
             logging.error(f"An error occurred while deleting a candidate: {e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -122,6 +133,7 @@ class CandidateService:
         - HTTPException with status code 404 if no candidates are found.
         - HTTPException with status code 500 if an error occurs during candidate retrieval.
         """
+        # Prepare a dictionary for filters
         filters = {}
         if first_name:
             filters["first_name"] = first_name
@@ -152,14 +164,17 @@ class CandidateService:
         if gender:
             filters["gender"] = gender
         if search:
+            # Use text search on searchable fields
             filters["$text"] = {"$search": search}
 
         try:
+            # Call repository to get all candidates based on filters
             candidates = CandidateRepository.get_all_candidates(user_id, filters)
             if not candidates:
                 return HTTPException(status_code=404, detail="No candidates found")
             return candidates
         except Exception as e:
+            # Log and raise HTTP exception in case of failure
             raise HTTPException(status_code=500, detail="Internal Server Error")
 
     def save_csv_report(candidates, filename: str):
@@ -167,18 +182,20 @@ class CandidateService:
         try:
             # Create DataFrame and convert ObjectId to string
             df = pd.DataFrame(candidates)
+            # Convert ObjectId to string for compatibility
             df["_id"] = df["_id"].astype(str)
 
-            # Save the CSV file to disk
+            # Create a CSV buffer to store CSV data
             csv_buffer = io.StringIO()
             df.to_csv(csv_buffer, index=False)
             csv_buffer.seek(0)
 
-            # Write the CSV to a file
+            # Write CSV content to the file
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(csv_buffer.getvalue())
 
         except Exception as e:
+            # Log any errors during CSV generation
             logging.error(f"An error occurred while generating the CSV: {e}")
             raise
 
@@ -209,15 +226,20 @@ class CandidateService:
         - HTTPException with status code 500 if an error occurs during report generation.
         """
         try:
+            # Fetch all candidate data for report generation
             candidates = CandidateRepository.fetch_all_candidates()
             if not candidates:
                 raise HTTPException(status_code=404, detail="No candidates found")
 
+            # Filename for the report
             filename = "candidates_report.csv"
+            # Add the task to save the CSV report in the background
             background_tasks.add_task(CandidateService.save_csv_report, candidates, filename)
 
+            # Inform the user that the report generation has started
             return {"message": "Report generation in progress. You can download the report once it's ready."}
 
         except Exception as e:
+            # Log and raise HTTP exception in case of failure
             logging.error(f"An error occurred while generating the report: {e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")

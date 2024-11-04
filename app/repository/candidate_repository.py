@@ -18,8 +18,11 @@ class CandidateRepository:
         Raises:
         - Exception if the candidate could not be created.
         """
+        # Convert the candidate object to a dictionary for MongoDB insertion.
         candidate_data = candidate.dict()
+        # Insert the candidate into the collection.
         result: InsertOneResult = candidate_collection.insert_one(candidate_data)
+        # If insertion is successful, return the candidate data with the generated ID.
         if result.acknowledged:
             candidate_data["_id"] = str(result.inserted_id)
             return candidate_data
@@ -36,7 +39,9 @@ class CandidateRepository:
         Returns:
         - The candidate data if found, otherwise None.
         """
+        # Query MongoDB for a candidate that matches both candidate_id and user_id.
         candidate_data = candidate_collection.find_one({"_id": ObjectId(candidate_id), "user_id": user_id})
+        # If the candidate is found, convert ObjectId to string and return the candidate data.
         if candidate_data:
             candidate_data["_id"] = str(candidate_data["_id"])
             return candidate_data
@@ -57,14 +62,18 @@ class CandidateRepository:
         Raises:
         - Exception if the candidate is not found or the update fails.
         """
+        # Perform an update on the candidate matching candidate_id and user_id with the updated candidate data.
         result: UpdateResult = candidate_collection.update_one(
             {"_id": ObjectId(candidate_id), "user_id": user_id},
             {"$set": updated_candidate.dict(exclude_unset=True)}
         )
+        # Raise an error if no matching candidate was found.
         if result.matched_count == 0:
             raise Exception("Candidate not found")
+        # Raise an error if the update did not modify any data.
         if result.modified_count == 0:
             raise Exception("Candidate update failed")
+        # Retrieve and return the updated candidate data.
         updated_candidate_data = candidate_collection.find_one({"_id": ObjectId(candidate_id)})
         updated_candidate_data["_id"] = str(updated_candidate_data["_id"])
         return updated_candidate_data
@@ -83,7 +92,9 @@ class CandidateRepository:
         Raises:
         - Exception if the candidate is not found.
         """
+        # Perform a delete operation for a candidate matching candidate_id and user_id.
         result: DeleteResult = candidate_collection.delete_one({"_id": ObjectId(candidate_id), "user_id": user_id})
+        # Raise an error if no matching candidate was found to delete.
         if result.deleted_count == 0:
             raise Exception("Candidate not found")
         return {"status": "success", "message": "Candidate deleted"}
@@ -99,10 +110,13 @@ class CandidateRepository:
         Returns:
         - A list of candidates matching the filters.
         """
+        # Add the user_id to the query filters.
         query = {"user_id": user_id}
         query.update(filters)
+        # Fetch all candidates that match the query and convert the result to a list.
         candidates_cursor = candidate_collection.find(query)
         candidates = list(candidates_cursor)
+        # Convert ObjectId to string for all candidates.
         for candidate in candidates:
             candidate["_id"] = str(candidate["_id"])
         return candidates
@@ -115,6 +129,7 @@ class CandidateRepository:
         Returns:
         - A list of all candidates.
         """
+        # Fetch all candidates from the collection.
         candidates_cursor = candidate_collection.find()
         candidates = list(candidates_cursor)
         return candidates
