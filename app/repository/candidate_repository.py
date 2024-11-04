@@ -19,7 +19,7 @@ class CandidateRepository:
         - Exception if the candidate could not be created.
         """
         # Convert the candidate object to a dictionary for MongoDB insertion.
-        candidate_data = candidate.dict()
+        candidate_data = candidate.__dict__
         # Insert the candidate into the collection.
         result: InsertOneResult = candidate_collection.insert_one(candidate_data)
         # If insertion is successful, return the candidate data with the generated ID.
